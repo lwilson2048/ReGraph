@@ -1,6 +1,7 @@
 build/*
 dist/*
 ReGraph.egg-info/
+regraph.egg-info/
 regraph/library/__pycache__/
 venv/*
 regraph/__pycache__/
