@@ -152,6 +152,10 @@ class Neo4jGraph(Graph):
         result = self._execute(query)
 
         node_list = []
+
+        if result.closed():
+            return node_list
+
         for d in result:
             node_id = d["node_id"]
             if data:
@@ -172,6 +176,9 @@ class Neo4jGraph(Graph):
             data=data)
         result = self._execute(query)
         edges = []
+
+        if result.closed():
+            return edges
 
         for d in result:
             if d["source_id"] not in self.nodes():
