@@ -38,7 +38,7 @@ def load_graph_from_json_apoc(tx, json_data, node_label, edge_label,
             "WITH 'file:///{}' AS url\n".format(path) +
             "CALL apoc.load.json(url) YIELD value\n" +
             "UNWIND value.nodes AS node\n" +
-            "MERGE (n:{} {{ id: node.id }}) ON CREATE\n".format(node_label) +
+            "MERGE (n{} {{ id: node.id }}) ON CREATE\n".format(node_label) +
             "\tSET n = node.attrs\n"
         )
         tx.run(node_query)
@@ -48,9 +48,9 @@ def load_graph_from_json_apoc(tx, json_data, node_label, edge_label,
             "WITH 'file:///{}' AS url\n".format(path) +
             "CALL apoc.load.json(url) YIELD value\n" +
             "UNWIND value.edges AS edge\n" +
-            "MATCH (u:{} {{ id: edge.from }}), (v:{} {{ id: edge.to }}) \n".format(
+            "MATCH (u{} {{ id: edge.from }}), (v{} {{ id: edge.to }}) \n".format(
                 node_label, node_label) +
-            "MERGE (u)-[rel:{}]->(v)\n ON CREATE\n".format(edge_label) +
+            "MERGE (u)-[rel{}]->(v)\n ON CREATE\n".format(edge_label) +
             "\tSET rel = edge.attrs\n"
         )
         tx.run(edge_query)
@@ -84,7 +84,7 @@ def load_graph_from_json(json_data, node_label, edge_label, literal_id=True,
         attr_repr = generate_attributes(
             attrs_from_json(node_data["attrs"]))
         nodes.append(
-            "({}:{} {{ id: {} {} }})".format(
+            "({}{} {{ id: {} {} }})".format(
                 var_names[node_data["id"]], node_label, node_id,
                 ", " + attr_repr if len(attr_repr) > 0 else ""))
 
@@ -141,7 +141,7 @@ def generate_var_name():
 def set_id(node_label, old_id, new_id):
     """Generate a subquery to set new id for the node."""
     query = (
-        "MATCH (n:{} {{id : '{}'}})\n".format(node_label, old_id) +
+        "MATCH (n{} {{id : '{}'}})\n".format(node_label, old_id) +
         "SET n.id = '{}'".format(new_id)
     )
     return query
@@ -276,7 +276,7 @@ def match_node(var_name, node_id, node_label):
     label
         Label of the node to match, default is 'node'
     """
-    return "MATCH ({}:{} {{ id : '{}' }})\n".format(
+    return "MATCH ({}{} {{ id : '{}' }})\n".format(
         var_name, node_label, node_id)
 
 
@@ -294,7 +294,7 @@ def match_nodes(var_id_dict, node_label=None):
     """
     node_label_str = ""
     if node_label:
-        node_label_str = ":{}".format(node_label)
+        node_label_str = "{}".format(node_label)
 
     query =\
         "MATCH " +\
@@ -352,7 +352,7 @@ def clear_graph(node_label=None):
     if node_label is None:
         query = "MATCH (n)\n"
     else:
-        query = "MATCH (n:{})\n".format(node_label)
+        query = "MATCH (n{})\n".format(node_label)
     query += \
         "OPTIONAL MATCH (n)-[r]-()\n" +\
         "DELETE n, r\n"
@@ -368,9 +368,9 @@ def get_nodes(node_label, data=False):
         Label of the nodes to match, default is 'node'
     """
     if data:
-        query = "MATCH (n:{}) RETURN n.id as node_id, properties(n) as attrs\n".format(node_label)
+        query = "MATCH (n{}) RETURN n.id as node_id, properties(n) as attrs\n".format(node_label)
     else:
-        query = "MATCH (n:{}) RETURN n.id as node_id\n".format(node_label)
+        query = "MATCH (n{}) RETURN n.id as node_id\n".format(node_label)
     return query
 
 
@@ -388,12 +388,12 @@ def get_edges(source_label, target_label,
         Label of the edges to match
     """
     if data:
-        query = "MATCH (n:{})-[r:{}]->(m:{})\nRETURN n.id as source_id, m.id as target_id, properties(r) as attrs\n".format(
+        query = "MATCH (n{})-[r{}]->(m{})\nRETURN n.id as source_id, m.id as target_id, properties(r) as attrs\n".format(
                 source_label,
                 edge_label,
                 target_label)
     else:
-        query = "MATCH (n:{})-[r:{}]->(m:{})\nRETURN n.id as source_id, m.id as target_id\n".format(
+        query = "MATCH (n{})-[r{}]->(m{})\nRETURN n.id as source_id, m.id as target_id\n".format(
                 source_label,
                 edge_label,
                 target_label)
@@ -426,7 +426,7 @@ def successors_query(var_name, node_id, node_label,
     else:
         arrow = ""
     query = (
-        "OPTIONAL MATCH (`{}`:{} {{id : '{}'}})-[:{}]-{}(suc:{})\n".format(
+        "OPTIONAL MATCH (`{}`{} {{id : '{}'}})-[{}]-{}(suc{})\n".format(
             var_name, node_label,
             node_id, edge_label,
             arrow,
@@ -456,7 +456,7 @@ def predecessors_query(var_name, node_id, node_label,
     if predecessor_label is None:
         predecessor_label = node_label
     query = (
-        "OPTIONAL MATCH (pred:{})-[:{}]-> (n:{} {{id : '{}'}})\n".format(
+        "OPTIONAL MATCH (pred{})-[{}]-> (n{} {{id : '{}'}})\n".format(
             predecessor_label,
             edge_label,
             node_label, node_id) +
@@ -474,7 +474,7 @@ def predecessors_query(var_name, node_id, node_label,
 def get_edge(s, t, source_label, target_label, edge_label):
     """Get edge by the ids of its incident nodes."""
     query =\
-        "MATCH (n:{} {{id: '{}'}})-[rel:{}]->(m:{} {{id: '{}'}})".format(
+        "MATCH (n{} {{id: '{}'}})-[rel{}]->(m{} {{id: '{}'}})".format(
             source_label, s, edge_label, target_label, t) +\
         "RETURN rel\n"
 
@@ -483,7 +483,7 @@ def get_edge(s, t, source_label, target_label, edge_label):
 
 def constraint_query(node_var, node_label, node_property):
     """Generate query for creating a constraint on a property."""
-    query = "CONSTRAINT ON ({}:{}) ASSERT {}.{} IS UNIQUE".format(
+    query = "CONSTRAINT ON ({}{}) ASSERT {}.{} IS UNIQUE".format(
         node_var,
         node_label,
         node_var,
@@ -987,7 +987,7 @@ def nb_of_attrs_mismatch(source, target):
 
 def exists_edge(s, t, node_label, edge_label):
     query = (
-        "RETURN EXISTS( (:{} {{ id: '{}' }})-[:{}]->(:{} {{ id: '{}' }}) ) AS result".format(
+        "RETURN EXISTS( ({} {{ id: '{}' }})-[{}]->({} {{ id: '{}' }}) ) AS result".format(
             node_label, s, edge_label, node_label, t)
     )
     return query
@@ -1013,7 +1013,7 @@ def attributes_inclusion(source_var, target_var, result_var):
 def get_node_attrs(node_id, node_label, attrs_var):
     """Query for retreiving node's attributes."""
     query = (
-        "MATCH (n:{} {{ id: '{}' }}) \n".format(
+        "MATCH (n{} {{ id: '{}' }}) \n".format(
             node_label, node_id) +
         "RETURN properties(n) as {}\n".format(attrs_var)
     )
@@ -1023,7 +1023,7 @@ def get_node_attrs(node_id, node_label, attrs_var):
 def get_edge_attrs(source_id, targe_id, node_label, edge_label, attrs_var):
     """Query for retreiving edge's attributes."""
     query = (
-        "MATCH (n:{} {{ id: '{}' }})-[rel:{}]->(m:{} {{ id: '{}' }}) \n".format(
+        "MATCH (n{} {{ id: '{}' }})-[rel{}]->(m{} {{ id: '{}' }}) \n".format(
             node_label, source_id, edge_label, node_label, targe_id) +
         "RETURN properties(rel) as {}\n".format(attrs_var)
     )
@@ -1063,8 +1063,9 @@ def properties_to_attributes(result, var_name):
 
 def descendants_query(node_id, node_label, edge_label="edge"):
     """Generate Cypher query finding descendant nodes starting at 'node_id'."""
+    #Might need to handle the possible : in an edge label
     return (
-        "MATCH path=(n:{} {{id: '{}'}})-[:{}*1..]->(m:{})\n".format(
+        "MATCH path=(n{} {{id: '{}'}})-[{}*1..]->(m{})\n".format(
             node_label, node_id, edge_label, node_label) +
         "RETURN m.id AS descendant, REDUCE(p=[], n in nodes(path) | p + [n.id]) as path\n"
     )
@@ -1072,16 +1073,18 @@ def descendants_query(node_id, node_label, edge_label="edge"):
 
 def ancestors_query(node_id, node_label, edge_label="edge"):
     """Generate Cypher query finding ancestors nodes starting at 'node_id'."""
+    #Might need to handle the possible : in an edge label
     return (
-        "MATCH path=(m:{})-[:{}*1..]->(n:{} {{id: '{}'}})\n".format(
+        "MATCH path=(m{})-[:{}*1..]->(n{} {{id: '{}'}})\n".format(
             node_label, node_id, edge_label, node_label) +
         "RETURN m.id AS ancestor, REDUCE(p=[], n in nodes(path) | p + [n.id]) as path\n"
     )
 
 
 def shortest_path_query(source_id, target_id, node_label, edge_label):
+    #Might need to handle the possible : in an edge label
     return (
-        "MATCH path=shortestPath((n:{} {{id: '{}'}})-[{}*1..]->(m:{} {{id: '{}'}})) \n".format(
+        "MATCH path=shortestPath((n{} {{id: '{}'}})-[{}*1..]->(m{} {{id: '{}'}})) \n".format(
             node_label, source_id, edge_label, node_label, target_id) +
         "RETURN REDUCE(p=[], l in nodes(path) | p + [l.id]) as path"
     )

@@ -41,8 +41,8 @@ class Neo4jGraph(Graph):
 
     def __init__(self, driver=None, uri=None,
                  user=None, password=None,
-                 node_label="node",
-                 edge_label="edge",
+                 node_label="",
+                 edge_label="",
                  unique_node_ids=True):
         """Initialize Neo4jGraph object.
 
@@ -90,8 +90,7 @@ class Neo4jGraph(Graph):
         """Execute a Cypher query."""
         with self._driver.session() as session:
             if len(query) > 0:
-                result = session.run(query)
-                return result
+                return [i for i in session.run(query)]
 
     def _close(self):
         """Close connection to the database."""
@@ -153,9 +152,6 @@ class Neo4jGraph(Graph):
 
         node_list = []
 
-        if result.closed():
-            return node_list
-
         for d in result:
             node_id = d["node_id"]
             if data:
@@ -176,9 +172,6 @@ class Neo4jGraph(Graph):
             data=data)
         result = self._execute(query)
         edges = []
-
-        if result.closed():
-            return edges
 
         for d in result:
             if d["source_id"] not in self.nodes():
